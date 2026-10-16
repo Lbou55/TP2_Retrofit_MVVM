@@ -30,6 +30,14 @@ class PatientViewModel(
     // One-time messages (Snackbar)
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages.asSharedFlow()
+    // Selected filter: null = Tous, "Actif", or "Inactif"
+    private val _filter = MutableStateFlow<String?>(null)
+    val filter: StateFlow<String?> = _filter.asStateFlow()
+
+    fun setFilter(statut: String?) {
+        _filter.value = statut
+        loadPatients()
+    }
 
     init {
         loadPatients()
@@ -38,7 +46,7 @@ class PatientViewModel(
     fun loadPatients() {
         _uiState.value = PatientsUiState.Loading
         viewModelScope.launch {
-            repository.getPatients()
+            repository.getPatients(_filter.value)
                 .onSuccess { patients -> _uiState.value = PatientsUiState.Success(patients) }
                 .onFailure { e -> _uiState.value = PatientsUiState.Error(e.message ?: "Erreur inconnue") }
         }
@@ -52,6 +60,17 @@ class PatientViewModel(
                     _messages.emit("${patient.prenom} ${patient.nom} ajouté")
                 }
                 .onFailure { e -> _messages.emit(e.message ?: "Ajout impossible") }
+        }
+    }
+
+    fun updatePatient(id: String, request: PatientRequest) {
+        viewModelScope.launch {
+            repository.updatePatient(id, request)
+                .onSuccess { patient ->
+                    updateList { list -> list.map { if (it.id == patient.id) patient else it } }
+                    _messages.emit("${patient.prenom} ${patient.nom} modifié")
+                }
+                .onFailure { e -> _messages.emit(e.message ?: "Modification impossible") }
         }
     }
 

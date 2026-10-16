@@ -8,21 +8,29 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import java.io.IOException
+import com.example.patients.data.model.Consultation
 
 class PatientRepository(
     private val api: PatientApi,
     private val json: Json
 ) {
 
-    suspend fun getPatients(): Result<List<Patient>> = safeCall { api.getPatients() }
+    suspend fun getPatients(statut: String? = null): Result<List<Patient>> =
+        safeCall { api.getPatients(statut) }
 
     suspend fun createPatient(request: PatientRequest): Result<Patient> =
         safeCall { api.createPatient(request) }
+
+    suspend fun updatePatient(id: String, request: PatientRequest): Result<Patient> =
+        safeCall { api.updatePatient(id, request) }
 
     suspend fun deletePatient(id: String): Result<Unit> = safeCall {
         val response = api.deletePatient(id)
         if (!response.isSuccessful) throw HttpException(response)
     }
+
+    suspend fun getConsultations(patientId: String): Result<List<Consultation>> =
+        safeCall { api.getConsultations(patientId) }
 
     // Runs a network call and turns any error into a readable message
     private suspend fun <T> safeCall(call: suspend () -> T): Result<T> =

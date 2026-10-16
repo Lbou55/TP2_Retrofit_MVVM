@@ -10,6 +10,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
+import com.example.patients.data.model.Consultation
 
 interface PatientApi {
 
@@ -28,4 +29,7 @@ interface PatientApi {
     // 204 = no body, so we take the raw response
     @DELETE("patients/{id}")
     suspend fun deletePatient(@Path("id") id: String): Response<Unit>
+
+    @GET("consultations")
+    suspend fun getConsultations(@Query("patient") patientId: String): List<Consultation>
 }
